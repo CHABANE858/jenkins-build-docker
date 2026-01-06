@@ -9,10 +9,13 @@ node {
         app = docker.build("xavki/nginx")
     }
 
+    stage('Cleanup old containers') {
+        sh 'docker rm -f $(docker ps -aq --filter ancestor=xavki/nginx) || true'
+    }
+
     stage('Run image') {
-        app.withRun('-p 8080:80') {
-            sh 'docker ps'
-            sh 'curl http://localhost:8080'
-        }
+        sh 'docker run -d -p 8093:80 xavki/nginx'
+        sh 'docker ps'
+        sh 'curl http://localhost:8093'
     }
 }

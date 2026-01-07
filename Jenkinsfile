@@ -6,23 +6,27 @@ node {
     }
 
     stage('Build image') {
-        app = docker.build("xavki/nginx")
+        // Construire l'image et stocker dans la variable app
+        app = docker.build("registry.gitlab.com/chabane1997/jenkins-docker:version-${env.BUILD_ID}")
     }
 
     stage('Cleanup old containers') {
-        sh 'docker rm -f $(docker ps -aq --filter ancestor=xavki/nginx) || true'
+        sh 'docker rm -f $(docker ps -aq --filter ancestor=registry.gitlab.com/chabane1997/jenkins-docker:version-${BUILD_ID}) || true'
     }
 
     stage('Run image') {
-        sh 'docker run -d -p 8093:80 xavki/nginx'
-        sh 'docker ps'
-        sh 'curl http://localhost:8093'
+        // Tester le conteneur
+        app.withRun("-d -p 8094:80") {
+            sh 'curl localhost:8094'
+            sh 'docker ps'
+        }
     }
-}
-stage('Push') {
-    docker.withRegistry('https://registry.gitlab.com', '6c5ab13e-5f0a-45b4-bd3e-8ee29b1c096e') {
-        img.push('latest')          // tag latest
-        img.push()                  // tag version-BUILD_ID
-    }
-}
 
+    stage('Push') {
+        // Pousser l'image sur GitLab
+        docker.withRegistry('https://registry.gitlab.com', '6c5ab13e-5f0a-45b4-bd3e-8ee29b1c096e') {
+            app.push('latest')          // tag latest
+            app.push()                  // tag version-BUILD_ID
+        }
+    }
+}

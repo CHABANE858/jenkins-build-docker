@@ -16,7 +16,7 @@ node {
 
     stage('Run image') {
         // Tester le conteneur
-        app.withRun("-d -p 8094:80") {
+        app.withRun("-d -p 8999:80") {
             sh 'curl localhost:8094'
             sh 'docker ps'
         }
